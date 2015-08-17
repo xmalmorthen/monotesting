@@ -21,65 +21,39 @@ namespace PortList
 				mySerial.Close ();
 
 			try {
-				mySerial = new SerialPort ("/dev/ttyS1", 9600, Parity.None, 8, StopBits.Two );
-				mySerial.Open ();
-
-				Console.WriteLine("Puerto /dev/ttyS1 abierto!!!");
-
+				//mySerial = new SerialPort ("/dev/ttyS0", 38400, Parity.None, 8, StopBits.Two );
+				mySerial = new SerialPort("/dev/ttyS0", 38400);
+				mySerial.Open();
 				mySerial.ReadTimeout = 400;
+				SendData("ATI3\r");
 
-				byte[] buf = new byte[1];
-				buf [0] = 0x41;
 
-				Console.WriteLine("Escribiendo 0x41 en puerto /dev/ttyS1");
+				mySerial.DataReceived += new SerialDataReceivedEventHandler(ReadData);
 
-				mySerial.Write (buf, 0, buf.Length);
-				mySerial.Close();	
+				Console.WriteLine(ReadData());
 			} catch (Exception ex) {
 				Console.WriteLine ("Error al intentar escribir en el puerto - {0}", ex.Message);
 			}
 
-			/*while (true) {
-				Console.WriteLine (ReadData ());
-				// Hook a write to the text file.
-				//StreamWriter writer = new StreamWriter ("/home/luiswisp/archivo.txt", true);
-				// Rewrite the entire value of s to the file
-				//string a = ReadData ();
-				writer.WriteLine (a);
-				// Close the writer
-				writer.Close ();
-			}*/
+
 		}
 
-		public string ReadData ()
+		public string ReadData(object sender, SerialDataReceivedEventArgs e)
 		{
-			byte tmpByte;
-			string rxString = "";
-
-			try {
-
-				tmpByte = (byte)mySerial.ReadByte ();
-
-				while (true) {
-					//Console.WriteLine("Data Received");
-					try {
-						rxString += ((char)tmpByte);
-						tmpByte = (byte)mySerial.ReadByte ();
-					} catch {
-						rxString += "!2";
-						break;
-					}
-				}
-
-			} catch {
-				rxString += "!1";
+			SerialPort spL = (SerialPort) sender;
+			byte[] buf = new byte[spL.BytesToRead];
+			Console.WriteLine("DATA RECEIVED!");
+			spL.Read(buf, 0, buf.Length);
+			foreach (Byte b in buf)
+			{
+				Console.Write(b.ToString());
 			}
-			return rxString;
+			Console.WriteLine();
 		}
 
-		public bool SendData (string Data)
+		public bool SendData(string Data)
 		{
-			mySerial.Write (Data);
+			mySerial.Write(Data);
 			return true;
 		}
 	}
